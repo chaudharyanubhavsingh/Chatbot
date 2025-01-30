@@ -7,21 +7,19 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-
 let chatMemory = [];
 
 function sendQuery() {
-    const query = document.getElementById("query-input").value;
+    const inputField = document.getElementById("query-input");
+    const query = inputField.value.trim();
     if (!query) return;
-    
-    const chatLog = document.getElementById("chat-log");
-    const userMessage = document.createElement("p");
-    userMessage.textContent = "You: " + query;
-    chatLog.appendChild(userMessage);
-    
-  
+
+    addMessage(query, "user-message");
+    inputField.value = "";
+    inputField.focus();
+
     chatMemory.push({ role: "user", content: query });
-    
+
     fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -35,21 +33,21 @@ function sendQuery() {
     })
     .then(data => {
         chatMemory.push({ role: "bot", content: data.response });
-        updateChatLog();
+        addMessage(data.response, "bot-message");
     })
     .catch(error => {
         console.error("Chat error:", error.message);
+        addMessage("⚠️ Error: Unable to fetch response.", "error-message");
     });
-    
-    
-    document.getElementById("query-input").value = "";
 }
-function updateChatLog() {
+
+function addMessage(text, className) {
     const chatLog = document.getElementById("chat-log");
-    chatLog.innerHTML = ''; 
-    chatMemory.forEach(message => {
-        const messageElement = document.createElement("p");
-        messageElement.textContent = `${message.role === 'user' ? 'You' : 'Bot'}: ${message.content}`;
-        chatLog.appendChild(messageElement);
-    });
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("message", className);
+    messageDiv.textContent = text;
+    chatLog.appendChild(messageDiv);
+
+
+    chatLog.scrollTop = chatLog.scrollHeight;
 }
